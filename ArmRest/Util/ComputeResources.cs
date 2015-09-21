@@ -15,6 +15,7 @@ namespace ArmRest.Util
     {
         private static string ResourceGroupFilter = ConfigurationManager.AppSettings["Ansible:ResourceGroupNameFilter"];
         private static string SubscriptionFilter = ConfigurationManager.AppSettings["Ansible:SubscriptionFilter"];
+        private static string ReturnOnlyPoweredOnVms = ConfigurationManager.AppSettings["Ansible:ReturnRunningVmsOnly"];
         public static Dictionary<String,Object> GetHosts(String accessToken, String subscriptionId = null )
         {
 
@@ -81,6 +82,12 @@ namespace ArmRest.Util
                         List<Object> hostList = new List<Object>();
                         foreach (var vm in rgCompVms.value)
                         {
+                            bool VerifyPoweredOnVM = true;
+                            if (ReturnOnlyPoweredOnVms.ToLower() == "true")
+                            {
+                                VerifyPoweredOnVM = GetVmPowerStatus(accessToken, vm);
+                            }
+
                             string vmname = vm.name;
 
                             if ((vm.tags != null) && (vm.tags.ContainsKey("AnsibleDomainSuffix")))
@@ -92,19 +99,24 @@ namespace ArmRest.Util
                                 vmname = vm.name + "." + rg.tags["AnsibleDomainSuffix"];
                             }
 
-                            hostList.Add(vmname);
-
-                            //check if we have hostsvars to add to meta
-                            if ((vm.tags != null) && (vm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")).Count() > 0))
+                            if (VerifyPoweredOnVM == true)
                             {
-                                var tagDict = new Dictionary<String, Object>();
-                                foreach (var tag in vm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")))
+                                hostList.Add(vmname);
+                                //check if we have hostsvars to add to meta
+                                if ((vm.tags != null) && (vm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")).Count() > 0))
                                 {
-                                    tagDict.Add(tag.Key.ToLower().Replace("ansible__", ""), tag.Value);
-                                }
+                                    var tagDict = new Dictionary<String, Object>();
+                                    foreach (var tag in vm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")))
+                                    {
+                                        tagDict.Add(tag.Key.ToLower().Replace("ansible__", ""), tag.Value);
+                                    }
 
-                                ansibleHostVarsList.Add(vmname, tagDict);
+                                    ansibleHostVarsList.Add(vmname, tagDict);
+                                }
                             }
+                            
+
+
 
 
                         }
@@ -156,6 +168,36 @@ namespace ArmRest.Util
             text = client.DownloadString(singleRgUrl);
             ResourceGroup thisRg = Newtonsoft.Json.JsonConvert.DeserializeObject<ResourceGroup>(text);
             return thisRg;
+        }
+
+        public static bool GetVmPowerStatus(String accessToken, ComputeVm thisVm)
+        {
+            bool returnResult = false;
+
+            string vmId = thisVm.id;
+            var SplitUrl = vmId.Split('/');
+            var rgName = SplitUrl[4];
+            var subscriptionName = SplitUrl[2];
+
+            string authToken = "Bearer" + " " + accessToken;
+            var client = new WebClient();
+            client.Headers.Add("Authorization", authToken);
+            client.Headers.Add("Content-Type", "application/json");
+
+            string vmStatusUrl = string.Format("https://management.azure.com/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Compute/virtualMachines/{2}?$expand=instanceView&api-version=2015-06-15", subscriptionName, rgName, thisVm.name);
+            String text = "";
+            text = client.DownloadString(vmStatusUrl);
+            var vmStatus = Newtonsoft.Json.JsonConvert.DeserializeObject<ComputeVm>(text);
+            var InstanceView = vmStatus.properties.instanceView.statuses;
+            var ThisInstanceview = InstanceView.Where(p => p.code.Contains("PowerState")).FirstOrDefault();
+            if (ThisInstanceview.code == "PowerState/running")
+            {
+                
+                returnResult = true;
+            }
+            
+            System.Diagnostics.Debug.WriteLine(string.Format("VM {0} in RG {1} has power state {2}", thisVm.name, rgName, ThisInstanceview.code));
+            return returnResult;            
         }
     }
 

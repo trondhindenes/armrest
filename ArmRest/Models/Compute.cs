@@ -75,8 +75,21 @@ namespace ArmRest.Models
         public OsProfile osProfile { get; set; }
         public NetworkProfile networkProfile { get; set; }
         public string provisioningState { get; set; }
+        public InstanceView instanceView { get; set; }
     }
 
+    public class InstanceView
+    {
+        public List<InstanceViewStatus> statuses { get; set; }
+    }
+
+    public class InstanceViewStatus
+    {
+        public string code { get; set; }
+        public string level { get; set; }
+        public string displayStatus { get; set; }
+        public string time { get; set; }
+    }
     public class Resource
     {
         public string id { get; set; }
