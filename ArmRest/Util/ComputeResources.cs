@@ -88,12 +88,11 @@ namespace ArmRest.Util
                                 VerifyPoweredOnVM = GetVmPowerStatus(accessToken, vm);
                             }
 
-                            var nic = vm.properties.networkProfile.networkInterfaces.FirstOrDefault();
-                            string nicLink = nic.id;
-                            String nicUrl = String.Format("https://management.azure.com{0}{1}", nicLink, "?api-version=2015-05-01-preview");
-                            String nicText = client.DownloadString(nicUrl);
+                            var simplifiedNic = GetNicDetails(accessToken, vm);
+                            vm.simplifiedNicDetails = simplifiedNic;
 
                             string vmname = vm.name;
+
 
                             if ((vm.tags != null) && (vm.tags.ContainsKey("AnsibleDomainSuffix")))
                             {
@@ -103,6 +102,36 @@ namespace ArmRest.Util
                             {
                                 vmname = vm.name + "." + rg.tags["AnsibleDomainSuffix"];
                             }
+                            String ansibleReturnType = null;
+                            if ((vm.tags != null) && (vm.tags.ContainsKey("AnsibleReturn")))
+                            {
+                                ansibleReturnType =  vm.tags["AnsibleReturn"];
+                            }
+                            else if ((rg.tags != null) && (rg.tags.ContainsKey("AnsibleReturn")))
+                            {
+                                ansibleReturnType = vm.tags["AnsibleReturn"];
+                            }
+
+                            //If ansiblereturn is set, figure out what to return
+                            if (ansibleReturnType != null)
+                            {
+                                if ((ansibleReturnType.ToLower() == "privateipaddress") && (vm.simplifiedNicDetails.InternalIpAddress != null))
+                                {
+                                    vmname = vm.simplifiedNicDetails.InternalIpAddress;
+                                }
+                                else if ((ansibleReturnType.ToLower() == "publicipaddress") && (vm.simplifiedNicDetails.PublicIpAddress != null))
+                                {
+                                    vmname = vm.simplifiedNicDetails.PublicIpAddress;
+                                }
+                                else if ((ansibleReturnType.ToLower() == "publichostname") && (vm.simplifiedNicDetails.PublicHostName != null))
+                                {
+                                    vmname = vm.simplifiedNicDetails.PublicHostName;
+                                }
+
+                            }
+
+                            //vmname is now either computername, computername+domain, one ip address or public fqdn
+                            
 
                             if (VerifyPoweredOnVM == true)
                             {
@@ -203,6 +232,55 @@ namespace ArmRest.Util
             
             System.Diagnostics.Debug.WriteLine(string.Format("VM {0} in RG {1} has power state {2}", thisVm.name, rgName, ThisInstanceview.code));
             return returnResult;            
+        }
+
+        public static SimplifiedNic GetNicDetails(String accessToken, ComputeVm Vm)
+        {
+            string authToken = "Bearer" + " " + accessToken;
+            var client = new WebClient();
+            client.Headers.Add("Authorization", authToken);
+            client.Headers.Add("Content-Type", "application/json");
+
+            var nic = Vm.properties.networkProfile.networkInterfaces.FirstOrDefault();
+            string nicLink = nic.id;
+            String nicUrl = String.Format("https://management.azure.com{0}{1}", nicLink, "?api-version=2015-05-01-preview");
+            String nicText = client.DownloadString(nicUrl);
+            //ComputeVms rgCompVms = JsonConvert.DeserializeObject<ComputeVms>(rgVmsText);
+            ArmRest.Models.NetworkInterfaceDetails.RootObject nicObj = JsonConvert.DeserializeObject<ArmRest.Models.NetworkInterfaceDetails.RootObject>(nicText);
+
+            String InternalIpAddress = nicObj.properties.ipConfigurations.FirstOrDefault().properties.privateIPAddress;
+
+            String PublicIpLink = nicObj.properties.ipConfigurations.FirstOrDefault().properties.publicIPAddress.id;
+            String publicIpUrl = String.Format("https://management.azure.com{0}{1}", PublicIpLink, "?api-version=2015-05-01-preview");
+            String publicIpText = client.DownloadString(publicIpUrl);
+
+            ArmRest.Models.PublicIpAddress.RootObject publicIpAddressObj = JsonConvert.DeserializeObject<ArmRest.Models.PublicIpAddress.RootObject>(publicIpText);
+
+            SimplifiedNic thisSimplifiedNic = new SimplifiedNic();
+            thisSimplifiedNic.InternalIpAddress = InternalIpAddress;
+            
+
+            String PublicIpAddress = null;
+            try
+            {
+                PublicIpAddress = publicIpAddressObj.properties.ipAddress;
+                thisSimplifiedNic.PublicIpAddress = PublicIpAddress;
+            }
+            catch
+            { }
+
+            try
+            {
+                thisSimplifiedNic.PublicHostName = publicIpAddressObj.properties.dnsSettings.fqdn;
+            }
+            catch
+            { }
+            
+
+            
+
+            return thisSimplifiedNic;
+
         }
     }
 

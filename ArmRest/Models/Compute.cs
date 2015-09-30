@@ -105,6 +105,7 @@ namespace ArmRest.Models
         public string type { get; set; }
         public string location { get; set; }
         public Dictionary<String,String> tags { get; set; }
+        public SimplifiedNic simplifiedNicDetails { get; set; }
     }
 
     public class ComputeVms

@@ -245,7 +245,9 @@
     <Compile Include="Models\Compute.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\NetworkInterface.cs" />
+    <Compile Include="Models\PublicIpAddress.cs" />
     <Compile Include="Models\ResourceGroup.cs" />
+    <Compile Include="Models\SimplifiedNic.cs" />
     <Compile Include="Models\Subscription.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
