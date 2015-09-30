@@ -53,14 +53,14 @@ namespace ArmRest.Models
         public List<object> secrets { get; set; }
     }
 
-    public class Properties2
+    public class NicProperties2
     {
     }
 
     public class NetworkInterface
     {
         public string id { get; set; }
-        public Properties2 properties { get; set; }
+        public NicProperties2 properties { get; set; }
     }
 
     public class NetworkProfile

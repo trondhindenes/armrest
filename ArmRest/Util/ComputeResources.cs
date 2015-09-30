@@ -88,6 +88,11 @@ namespace ArmRest.Util
                                 VerifyPoweredOnVM = GetVmPowerStatus(accessToken, vm);
                             }
 
+                            var nic = vm.properties.networkProfile.networkInterfaces.FirstOrDefault();
+                            string nicLink = nic.id;
+                            String nicUrl = String.Format("https://management.azure.com{0}{1}", nicLink, "?api-version=2015-05-01-preview");
+                            String nicText = client.DownloadString(nicUrl);
+
                             string vmname = vm.name;
 
                             if ((vm.tags != null) && (vm.tags.ContainsKey("AnsibleDomainSuffix")))

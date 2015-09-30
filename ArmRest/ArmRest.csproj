@@ -244,6 +244,7 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Compute.cs" />
     <Compile Include="Models\IdentityModels.cs" />
+    <Compile Include="Models\NetworkInterface.cs" />
     <Compile Include="Models\ResourceGroup.cs" />
     <Compile Include="Models\Subscription.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
