@@ -16,6 +16,7 @@ namespace ArmRest.Util
         private static string ResourceGroupFilter = ConfigurationManager.AppSettings["Ansible:ResourceGroupNameFilter"];
         private static string SubscriptionFilter = ConfigurationManager.AppSettings["Ansible:SubscriptionFilter"];
         private static string ReturnOnlyPoweredOnVms = ConfigurationManager.AppSettings["Ansible:ReturnRunningVmsOnly"];
+        private static string HostCasingSetting = ConfigurationManager.AppSettings["Ansible:HostCasing"];
         public static Dictionary<String,Object> GetHosts(String accessToken, String subscriptionId = null )
         {
 
@@ -91,7 +92,20 @@ namespace ArmRest.Util
                             var simplifiedNic = GetNicDetails(accessToken, vm);
                             vm.simplifiedNicDetails = simplifiedNic;
 
+                            
+                            if (HostCasingSetting == "UpperCase")
+                            {
+
+                                vm.name = vm.name.ToUpper();
+                            }
+
+                            if (HostCasingSetting == "LowerCase")
+                            {
+                                vm.name = vm.name.ToLower();
+                            }
+
                             string vmname = vm.name;
+
 
 
                             if ((vm.tags != null) && (vm.tags.ContainsKey("AnsibleDomainSuffix")))
