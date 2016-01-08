@@ -237,14 +237,15 @@ namespace ArmRest.Util
             text = client.DownloadString(vmStatusUrl);
             var vmStatus = Newtonsoft.Json.JsonConvert.DeserializeObject<ComputeVm>(text);
             var InstanceView = vmStatus.properties.instanceView.statuses;
-            var ThisInstanceview = InstanceView.Where(p => p.code.Contains("PowerState")).FirstOrDefault();
-            if (ThisInstanceview.code == "PowerState/running")
+            var ThisInstanceviewPowerState = InstanceView.Where(p => p.code.Contains("PowerState")).FirstOrDefault();
+            var ThisInstanceviewProvisioningState = InstanceView.Where(p => p.code.Contains("ProvisioningState")).FirstOrDefault();
+            if ((ThisInstanceviewPowerState.code == "PowerState/running") && (ThisInstanceviewProvisioningState.code == "ProvisioningState/succeeded"))
             {
                 
                 returnResult = true;
             }
             
-            System.Diagnostics.Debug.WriteLine(string.Format("VM {0} in RG {1} has power state {2}", thisVm.name, rgName, ThisInstanceview.code));
+            System.Diagnostics.Debug.WriteLine(string.Format("VM {0} in RG {1} has power state {2}", thisVm.name, rgName, ThisInstanceviewPowerState.code));
             return returnResult;            
         }
 
