@@ -62,7 +62,7 @@ namespace ArmRest.Util
                 List<ResourceGroup> filteredResourceGroups = new List<ResourceGroup>();
                 foreach (var rg in rgList.value)
                 {
-                    if (rg.name.Contains(ResourceGroupFilter))
+                    if (rg.name.ToLower().Contains(ResourceGroupFilter.ToLower()))
                     {
                         filteredResourceGroups.Add(rg);
                     }
