@@ -87,6 +87,7 @@ namespace ArmRest.Util
                         List<Object> hostList = new List<Object>();
                         foreach (var vm in rgCompVms.value)
                         {
+                            var tagDict = new Dictionary<String, Object>();
                             bool VerifyPoweredOnVM = true;
                             if (ReturnOnlyPoweredOnVms.ToLower() == "true")
                             {
@@ -96,7 +97,7 @@ namespace ArmRest.Util
                             var simplifiedNic = GetNicDetails(accessToken, vm);
                             vm.simplifiedNicDetails = simplifiedNic;
 
-                            
+
                             if (HostCasingSetting == "UpperCase")
                             {
 
@@ -123,11 +124,11 @@ namespace ArmRest.Util
                             String ansibleReturnType = null;
                             if ((vm.tags != null) && (vm.tags.ContainsKey("AnsibleReturn")))
                             {
-                                ansibleReturnType =  vm.tags["AnsibleReturn"];
+                                ansibleReturnType = vm.tags["AnsibleReturn"];
                             }
                             else if ((rg.tags != null) && (rg.tags.ContainsKey("AnsibleReturn")))
                             {
-                                ansibleReturnType = vm.tags["AnsibleReturn"];
+                                ansibleReturnType = rg.tags["AnsibleReturn"];
                             }
 
                             //If ansiblereturn is set, figure out what to return
@@ -145,11 +146,25 @@ namespace ArmRest.Util
                                 {
                                     vmname = vm.simplifiedNicDetails.PublicHostName;
                                 }
+                                else if ((ansibleReturnType.ToLower() == "privateipaddress_asansiblehost") && (vm.simplifiedNicDetails.InternalIpAddress != null))
+                                {
+
+                                    tagDict.Add("ansible_host", vm.simplifiedNicDetails.InternalIpAddress);
+                                }
+                                else if ((ansibleReturnType.ToLower() == "publicipaddress_asansiblehost") && (vm.simplifiedNicDetails.PublicIpAddress != null))
+                                {
+                                    tagDict.Add("ansible_host", vmname = vm.simplifiedNicDetails.PublicIpAddress);
+                                }
+                                else if ((ansibleReturnType.ToLower() == "publichostname_asansiblehost") && (vm.simplifiedNicDetails.PublicHostName != null))
+                                {
+                                    tagDict.Add("ansible_host", vmname = vmname = vm.simplifiedNicDetails.PublicHostName);
+                                }
+
 
                             }
 
                             //vmname is now either computername, computername+domain, one ip address or public fqdn
-                            
+
 
                             if (VerifyPoweredOnVM == true)
                             {
@@ -157,14 +172,19 @@ namespace ArmRest.Util
                                 //check if we have hostsvars to add to meta
                                 if ((vm.tags != null) && (vm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")).Count() > 0))
                                 {
-                                    var tagDict = new Dictionary<String, Object>();
                                     foreach (var tag in vm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")))
                                     {
                                         tagDict.Add(tag.Key.ToLower().Replace("ansible__", ""), tag.Value);
                                     }
 
-                                    ansibleHostVarsList.Add(vmname, tagDict);
+
                                 }
+                            }
+
+                            if (tagDict.Count > 0)
+                            {
+                                //add tags if any
+                                ansibleHostVarsList.Add(vmname, tagDict);
                             }
                             
 
@@ -195,6 +215,8 @@ namespace ArmRest.Util
                 }
 
             }
+
+            //Add the _meta thing to the result output
             var metaDict = new Dictionary<String, Object>();
             metaDict.Add("hostvars", ansibleHostVarsList);
             ansibleHostList.Add("_meta", metaDict);
