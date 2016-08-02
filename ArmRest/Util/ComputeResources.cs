@@ -62,7 +62,11 @@ namespace ArmRest.Util
                 List<ResourceGroup> filteredResourceGroups = new List<ResourceGroup>();
                 foreach (var rg in rgList.value)
                 {
-                    if (rg.name.ToLower().Contains(ResourceGroupFilter.ToLower()))
+                    if (ResourceGroupFilter == "*")
+                    {
+                        filteredResourceGroups.Add(rg);
+                    }
+                    else if (rg.name.ToLower().Contains(ResourceGroupFilter.ToLower()))
                     {
                         filteredResourceGroups.Add(rg);
                     }
@@ -185,15 +189,15 @@ namespace ArmRest.Util
 
 
                         ansibleHostList.Add(rgName, rgValueList);
-                        var metaDict = new Dictionary<String, Object>();
-                        metaDict.Add("hostvars", ansibleHostVarsList);
-                        ansibleHostList.Add("_meta", metaDict);
+                        
                         
                     }
                 }
 
             }
-
+            var metaDict = new Dictionary<String, Object>();
+            metaDict.Add("hostvars", ansibleHostVarsList);
+            ansibleHostList.Add("_meta", metaDict);
             return ansibleHostList;
         }
 
