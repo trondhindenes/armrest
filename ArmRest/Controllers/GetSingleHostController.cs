@@ -67,20 +67,33 @@ namespace ArmRest.Controllers
             
             }
             
-            ComputeVm thisComputeVm = masterComputeVmsList.value.Where(t => t.name == hostName).FirstOrDefault();
-           
+            ComputeVm thisComputeVm = masterComputeVmsList.value.Where(t => t.name.ToLower() == hostName.ToLower()).FirstOrDefault();
 
-
-            Dictionary<String, String> TagsDict = new Dictionary<String, String>();
-            foreach (var tag in thisComputeVm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")))
+            if (thisComputeVm == null)
             {
-                TagsDict.Add((tag.Key.ToLower().Replace("ansible__","")), tag.Value);
+                var response = this.Request.CreateResponse(HttpStatusCode.NotFound);
+                return response;
+            }
+            else
+            {
+                Dictionary<String, String> TagsDict = new Dictionary<String, String>();
+
+                if (thisComputeVm.tags != null)
+                {
+                    foreach (var tag in thisComputeVm.tags.Where(t => t.Key.ToLower().StartsWith("ansible__")))
+                    {
+                        TagsDict.Add((tag.Key.ToLower().Replace("ansible__", "")), tag.Value);
+                    }
+                }
+                
+
+                String json = JsonConvert.SerializeObject(TagsDict);
+                var response = this.Request.CreateResponse(HttpStatusCode.OK);
+                response.Content = new StringContent(json, Encoding.UTF8, "application/json");
+                return response;
             }
 
-            String json = JsonConvert.SerializeObject(TagsDict);
-            var response = this.Request.CreateResponse(HttpStatusCode.OK);
-            response.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            return response;
+            
         }
     }
 }
