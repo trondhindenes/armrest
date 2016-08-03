@@ -1,3 +1,5 @@
+* Forked from https://github.com/trondhindenes/armrest
+
 ## Armrest
 ### Short description
 Ansible Dynamic Inventory for Azure Resource Manager. This code is very non-optimized, and can be made more efficient by reducing auth calls to azure. Which I haven't gotten around to just yet.
