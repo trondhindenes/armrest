@@ -78,6 +78,24 @@ namespace ArmRest.Util
                     //get each host
                     String rgId = rg.id;
                     String rgName = rg.name;
+
+                    //remove Prod/Test/Dev from rg name
+                    if (rgName.ToLower().StartsWith("prod."))
+                    {
+                        rgName = rgName.Remove(0, 5);
+                    }
+                    else if (rgName.ToLower().StartsWith("test."))
+                    {
+                        rgName = rgName.Remove(0, 5);
+                    }
+                    else if (rgName.ToLower().StartsWith("dev."))
+                    {
+                        rgName = rgName.Remove(0, 4);
+                    }
+
+                    
+                    
+
                     String rgComputeUrl = String.Format("https://management.azure.com{0}/providers/Microsoft.Compute/virtualmachines?api-version=2015-05-01-preview", rgId);
                     String rgVmsText = client.DownloadString(rgComputeUrl);
                     ComputeVms rgCompVms = JsonConvert.DeserializeObject<ComputeVms>(rgVmsText);
