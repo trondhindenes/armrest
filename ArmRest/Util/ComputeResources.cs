@@ -17,7 +17,8 @@ namespace ArmRest.Util
         private static string SubscriptionFilter = ConfigurationManager.AppSettings["Ansible:SubscriptionFilter"];
         private static string ReturnOnlyPoweredOnVms = ConfigurationManager.AppSettings["Ansible:ReturnRunningVmsOnly"];
         private static string HostCasingSetting = ConfigurationManager.AppSettings["Ansible:HostCasing"];
-        private static string LocationTag = ConfigurationManager.AppSettings["Ansible:LocationTag"];
+        private static string LocationTagName = ConfigurationManager.AppSettings["Ansible:LocationTagName"];
+        private static string LocationTag = ConfigurationManager.AppSettings["Ansible:LocationTagValue"];
         public static Dictionary<String,Object> GetHosts(String accessToken, String subscriptionId = null )
         {
 
@@ -151,10 +152,10 @@ namespace ArmRest.Util
                             }
 
                             //add location thing if specified
-                            if (LocationTag != "")
+                            if (LocationTag != "" && LocationTagName != "")
                             {
                                 String Location = LocationTag.Replace("%location%", vm.location);
-                                tagDict.Add("armrest_location", Location);
+                                tagDict.Add(LocationTagName, Location);
                             }
 
                             //If ansiblereturn is set, figure out what to return
