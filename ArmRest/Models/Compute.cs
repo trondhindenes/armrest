@@ -104,7 +104,7 @@ namespace ArmRest.Models
         public string name { get; set; }
         public string type { get; set; }
         public string location { get; set; }
-        public Dictionary<String,String> tags { get; set; }
+        public Dictionary<String, String> tags { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         public SimplifiedNic simplifiedNicDetails { get; set; }
     }
 

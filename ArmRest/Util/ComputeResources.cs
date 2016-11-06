@@ -17,6 +17,7 @@ namespace ArmRest.Util
         private static string SubscriptionFilter = ConfigurationManager.AppSettings["Ansible:SubscriptionFilter"];
         private static string ReturnOnlyPoweredOnVms = ConfigurationManager.AppSettings["Ansible:ReturnRunningVmsOnly"];
         private static string HostCasingSetting = ConfigurationManager.AppSettings["Ansible:HostCasing"];
+        private static string LocationTag = ConfigurationManager.AppSettings["Ansible:LocationTag"];
         public static Dictionary<String,Object> GetHosts(String accessToken, String subscriptionId = null )
         {
 
@@ -147,6 +148,13 @@ namespace ArmRest.Util
                             else if ((rg.tags != null) && (rg.tags.ContainsKey("AnsibleReturn")))
                             {
                                 ansibleReturnType = rg.tags["AnsibleReturn"];
+                            }
+
+                            //add location thing if specified
+                            if (LocationTag != "")
+                            {
+                                String Location = LocationTag.Replace("%location%", vm.location);
+                                tagDict.Add("armrest_location", Location);
                             }
 
                             //If ansiblereturn is set, figure out what to return
@@ -309,34 +317,40 @@ namespace ArmRest.Util
 
             String InternalIpAddress = nicObj.properties.ipConfigurations.FirstOrDefault().properties.privateIPAddress;
 
-            String PublicIpLink = nicObj.properties.ipConfigurations.FirstOrDefault().properties.publicIPAddress.id;
-            String publicIpUrl = String.Format("https://management.azure.com{0}{1}", PublicIpLink, "?api-version=2015-05-01-preview");
-            String publicIpText = client.DownloadString(publicIpUrl);
-
-            ArmRest.Models.PublicIpAddress.RootObject publicIpAddressObj = JsonConvert.DeserializeObject<ArmRest.Models.PublicIpAddress.RootObject>(publicIpText);
-
+            ArmRest.Models.PublicIpAddress.RootObject publicIpAddressObj = new Models.PublicIpAddress.RootObject();
+            if (nicObj.properties.ipConfigurations.FirstOrDefault().properties.publicIPAddress != null)
+            {
+                String PublicIpLink = nicObj.properties.ipConfigurations.FirstOrDefault().properties.publicIPAddress.id;
+                String publicIpUrl = String.Format("https://management.azure.com{0}{1}", PublicIpLink, "?api-version=2015-05-01-preview");
+                String publicIpText = client.DownloadString(publicIpUrl);
+                publicIpAddressObj = JsonConvert.DeserializeObject<ArmRest.Models.PublicIpAddress.RootObject>(publicIpText);
+            }
+            
             SimplifiedNic thisSimplifiedNic = new SimplifiedNic();
             thisSimplifiedNic.InternalIpAddress = InternalIpAddress;
             
 
             String PublicIpAddress = null;
-            try
+            if (publicIpAddressObj != null)
             {
-                PublicIpAddress = publicIpAddressObj.properties.ipAddress;
-                thisSimplifiedNic.PublicIpAddress = PublicIpAddress;
-            }
-            catch
-            { }
+                try
+                {
+                    PublicIpAddress = publicIpAddressObj.properties.ipAddress;
+                    thisSimplifiedNic.PublicIpAddress = PublicIpAddress;
+                }
+                catch
+                { }
 
-            try
-            {
-                thisSimplifiedNic.PublicHostName = publicIpAddressObj.properties.dnsSettings.fqdn;
-            }
-            catch
-            { }
-            
+                try
+                {
+                    thisSimplifiedNic.PublicHostName = publicIpAddressObj.properties.dnsSettings.fqdn;
+                }
+                catch
+                { }
 
-            
+            }
+
+
 
             return thisSimplifiedNic;
 
