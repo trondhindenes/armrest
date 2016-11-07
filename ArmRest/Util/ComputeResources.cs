@@ -14,11 +14,16 @@ namespace ArmRest.Util
     public static class ComputeResources
     {
         private static string ResourceGroupFilter = ConfigurationManager.AppSettings["Ansible:ResourceGroupNameFilter"];
+        private static string ResourceGroupCasing = ConfigurationManager.AppSettings["Ansible:ResourceGroupCasing"];
         private static string SubscriptionFilter = ConfigurationManager.AppSettings["Ansible:SubscriptionFilter"];
         private static string ReturnOnlyPoweredOnVms = ConfigurationManager.AppSettings["Ansible:ReturnRunningVmsOnly"];
         private static string HostCasingSetting = ConfigurationManager.AppSettings["Ansible:HostCasing"];
         private static string LocationTagName = ConfigurationManager.AppSettings["Ansible:LocationTagName"];
         private static string LocationTag = ConfigurationManager.AppSettings["Ansible:LocationTagValue"];
+
+
+
+        
         public static Dictionary<String,Object> GetHosts(String accessToken, String subscriptionId = null )
         {
 
@@ -95,6 +100,13 @@ namespace ArmRest.Util
                         rgName = rgName.Remove(0, 4);
                     }
 
+                    if (ResourceGroupCasing != "")
+                    {
+                        if (ResourceGroupCasing.ToLower() == "lowercase")
+                        {
+                            rgName = rgName.ToLower();
+                        }
+                    }
                     
                     
 
