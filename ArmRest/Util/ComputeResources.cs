@@ -304,13 +304,23 @@ namespace ArmRest.Util
             var InstanceView = vmStatus.properties.instanceView.statuses;
             var ThisInstanceviewPowerState = InstanceView.Where(p => p.code.Contains("PowerState")).FirstOrDefault();
             var ThisInstanceviewProvisioningState = InstanceView.Where(p => p.code.Contains("ProvisioningState")).FirstOrDefault();
-            if ((ThisInstanceviewPowerState.code == "PowerState/running") && (ThisInstanceviewProvisioningState.code == "ProvisioningState/succeeded"))
+            try
             {
-                
-                returnResult = true;
+                if ((ThisInstanceviewPowerState.code == "PowerState/running") && (ThisInstanceviewProvisioningState.code == "ProvisioningState/succeeded"))
+                {
+
+                    returnResult = true;
+                }
+                System.Diagnostics.Debug.WriteLine(string.Format("VM {0} in RG {1} has power state {2}", thisVm.name, rgName, ThisInstanceviewPowerState.code));
+
+
             }
-            
-            System.Diagnostics.Debug.WriteLine(string.Format("VM {0} in RG {1} has power state {2}", thisVm.name, rgName, ThisInstanceviewPowerState.code));
+            catch (Exception e)
+            {
+                returnResult = false;
+            }
+
+
             return returnResult;            
         }
 
