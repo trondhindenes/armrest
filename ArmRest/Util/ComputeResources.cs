@@ -20,10 +20,10 @@ namespace ArmRest.Util
         private static string HostCasingSetting = ConfigurationManager.AppSettings["Ansible:HostCasing"];
         private static string LocationTagName = ConfigurationManager.AppSettings["Ansible:LocationTagName"];
         private static string LocationTag = ConfigurationManager.AppSettings["Ansible:LocationTagValue"];
+        public static bool RemoveStageFromRgName  = bool.Parse(ConfigurationManager.AppSettings["Ansible:RemoveStageFromRgName"])
 
 
 
-        
         public static Dictionary<String,Object> GetHosts(String accessToken, String subscriptionId = null )
         {
 
@@ -87,18 +87,27 @@ namespace ArmRest.Util
                     String rgName = rg.name;
 
                     //remove Prod/Test/Dev from rg name
-                    if (rgName.ToLower().StartsWith("prod."))
+                    if (RemoveStageFromRgName)
                     {
-                        rgName = rgName.Remove(0, 5);
+                        if (rgName.ToLower().StartsWith("prod."))
+                        {
+                            rgName = rgName.Remove(0, 5);
+                        }
+                        else if (rgName.ToLower().StartsWith("test."))
+                        {
+                            rgName = rgName.Remove(0, 5);
+                        }
+                        else if (rgName.ToLower().StartsWith("dev."))
+                        {
+                            rgName = rgName.Remove(0, 4);
+                        }
+
+                        else if (rgName.ToLower().StartsWith("uat."))
+                        {
+                            rgName = rgName.Remove(0, 4);
+                        }
                     }
-                    else if (rgName.ToLower().StartsWith("test."))
-                    {
-                        rgName = rgName.Remove(0, 5);
-                    }
-                    else if (rgName.ToLower().StartsWith("dev."))
-                    {
-                        rgName = rgName.Remove(0, 4);
-                    }
+                    
 
                     if (ResourceGroupCasing != "")
                     {
