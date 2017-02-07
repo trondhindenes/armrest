@@ -20,7 +20,7 @@ namespace ArmRest.Util
         private static string HostCasingSetting = ConfigurationManager.AppSettings["Ansible:HostCasing"];
         private static string LocationTagName = ConfigurationManager.AppSettings["Ansible:LocationTagName"];
         private static string LocationTag = ConfigurationManager.AppSettings["Ansible:LocationTagValue"];
-        public static bool RemoveStageFromRgName  = bool.Parse(ConfigurationManager.AppSettings["Ansible:RemoveStageFromRgName"])
+        public static bool RemoveStageFromRgName = bool.Parse(ConfigurationManager.AppSettings["Ansible:RemoveStageFromRgName"]);
 
 
 
